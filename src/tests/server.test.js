@@ -70,9 +70,8 @@ export default describe('Game Server', () => {
     // Reset mocks
     vi.resetModules();
     
-    try {
-      // Import the server module
-      serverModule = await import('../server.js');
+    try {      // Import the server module - use an absolute path
+      serverModule = await import('../../server.js');
       
       // Get mock WebSocketServer instance
       const WebSocketServer = await import('ws').then(m => m.WebSocketServer);

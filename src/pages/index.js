@@ -7,31 +7,40 @@ export default function Home() {
   const [gameState, setGameState] = useState({
     dragon: [{ x: 5, y: 5 }],
     direction: 'RIGHT',
-    leaves: { x: 10, y: 10 },
+    leaves: [{ x: 10, y: 10 }],
     gameOver: false,
     score: 0,
+    level: 1,
+    speed: 200, // base speed in ms (lower = faster)
     multiplayer: false,
     clientId: null,
     players: {}
   });
   
   const gameClient = useGameClient();  const handleKeyDown = (e) => {
-    // Convert key to lowercase to handle both uppercase and lowercase
-    const key = e.key.toLowerCase();
+    // Get the key value
+    const key = e.key;
     
-    const directionMap = {
-      w: 'UP',
-      s: 'DOWN',
-      a: 'LEFT',
-      d: 'RIGHT',
-    };
+    // Create direction mapping for both WASD and arrow keys
+    let direction;
     
-    const newDirection = directionMap[key];
-    if (!newDirection) return;
+    // Check for WASD keys (case insensitive)
+    if (key.toLowerCase() === 'w') direction = 'UP';
+    else if (key.toLowerCase() === 's') direction = 'DOWN';
+    else if (key.toLowerCase() === 'a') direction = 'LEFT';
+    else if (key.toLowerCase() === 'd') direction = 'RIGHT';
+    
+    // Check for arrow keys
+    else if (key === 'ArrowUp') direction = 'UP';
+    else if (key === 'ArrowDown') direction = 'DOWN';
+    else if (key === 'ArrowLeft') direction = 'LEFT';
+    else if (key === 'ArrowRight') direction = 'RIGHT';
+      // If no valid key was pressed, return
+    if (!direction) return;
     
     if (gameState.multiplayer) {
       // In multiplayer mode, send direction to server
-      gameClient.sendDirection(newDirection);
+      gameClient.sendDirection(direction);
     } else {
       // In single player mode, update direction locally
       setGameState((prev) => {
@@ -43,13 +52,14 @@ export default function Home() {
           'RIGHT': 'LEFT'
         };
         
-        if (newDirection !== oppositeDirections[prev.direction]) {
-          return { ...prev, direction: newDirection };
+        if (direction !== oppositeDirections[prev.direction]) {
+          return { ...prev, direction: direction };
         }
         return prev;
       });
     }
   };
+
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -67,6 +77,49 @@ export default function Home() {
       }
     };
   }, [gameState.multiplayer]);
+
+  // Helper function to generate a random position for a leaf
+  const generateRandomLeafPosition = (existingLeaves, dragonPositions) => {
+    let newPos;
+    let isValidPosition = false;
+    
+    while (!isValidPosition) {
+      newPos = {
+        x: Math.floor(Math.random() * 20),
+        y: Math.floor(Math.random() * 20)
+      };
+      
+      // Check that it doesn't overlap with existing leaves
+      const leafOverlap = existingLeaves.some(
+        leaf => leaf.x === newPos.x && leaf.y === newPos.y
+      );
+      
+      // Check that it doesn't overlap with the dragon
+      const dragonOverlap = dragonPositions.some(
+        segment => segment.x === newPos.x && segment.y === newPos.y
+      );
+      
+      isValidPosition = !leafOverlap && !dragonOverlap;
+    }
+    
+    return newPos;
+  };
+
+  // Calculate game speed based on level
+  const calculateGameSpeed = (level) => {
+    // Base speed is 200ms
+    // Every 5 levels, speed decreases by 20ms (gets faster)
+    const speedReduction = Math.floor((level - 1) / 5) * 20;
+    
+    // Don't let it go below 80ms (too fast becomes unplayable)
+    return Math.max(80, 200 - speedReduction);
+  };
+    // Calculate number of leaves based on level
+  const calculateLeafCount = (level) => {
+    // Start with 1 leaf, add another every 10 levels (starting at level 11, 21, 31, etc.)
+    return Math.floor((level - 1) / 10) + 1;
+  };
+
   useEffect(() => {
     // Only run game loop in single player mode
     if (gameState.multiplayer) return;
@@ -107,18 +160,39 @@ export default function Home() {
         // Add new head to the dragon
         newDragon.push(newHead);
         
-        // Check if dragon eats a leaf
-        if (newHead.x === prev.leaves.x && newHead.y === prev.leaves.y) {
-          const newLeaves = {
-            x: Math.floor(Math.random() * 20),
-            y: Math.floor(Math.random() * 20),
-          };
+        // Check if dragon eats any leaf
+        const eatenLeafIndex = prev.leaves.findIndex(
+          leaf => leaf.x === newHead.x && leaf.y === newHead.y
+        );
+        
+        if (eatenLeafIndex !== -1) {
+          // Calculate new level and speed
+          const newScore = prev.score + 1;
+          const newLevel = Math.floor(newScore / 5) + 1;
+          const newSpeed = calculateGameSpeed(newLevel);
+          
+          // Create a copy of the leaves array
+          const newLeaves = [...prev.leaves];
+          
+          // Replace the eaten leaf with a new one
+          newLeaves[eatenLeafIndex] = generateRandomLeafPosition(
+            newLeaves.filter((_, i) => i !== eatenLeafIndex),
+            newDragon
+          );
+          
+          // Check if we need to add more leaves due to level up
+          const requiredLeafCount = calculateLeafCount(newLevel);
+          while (newLeaves.length < requiredLeafCount) {
+            newLeaves.push(generateRandomLeafPosition(newLeaves, newDragon));
+          }
 
           return {
             ...prev,
             dragon: newDragon,
             leaves: newLeaves,
-            score: prev.score + 1,
+            score: newScore,
+            level: newLevel,
+            speed: newSpeed
           };
         }
 
@@ -126,15 +200,16 @@ export default function Home() {
         newDragon.shift();
         return { ...prev, dragon: newDragon };
       });
-    }, 200);
+    }, gameState.speed); // Use the dynamic speed
 
     return () => clearInterval(interval);
-  }, [gameState.multiplayer]);  return (
+  }, [gameState.multiplayer, gameState.speed]); // Add speed as dependency
+
+  return (
     <div className={styles.container}>
       <h1>Bearded Dragon Run</h1>
-      
-      <div className={styles.gameInfo}>
-        <p>Controls: W (up), A (left), S (down), D (right)</p>
+        <div className={styles.gameInfo}>
+        <p>Controls: W/↑ (up), A/← (left), S/↓ (down), D/→ (right)</p>
         
         <div className={styles.gameControls}>
           <button 
@@ -144,9 +219,11 @@ export default function Home() {
                 multiplayer: false,
                 dragon: [{ x: 5, y: 5 }],
                 direction: 'RIGHT',
-                leaves: { x: 10, y: 10 },
+                leaves: [{ x: 10, y: 10 }],
                 gameOver: false,
                 score: 0,
+                level: 1,
+                speed: 200,
               }));
             }}
           >
@@ -164,11 +241,41 @@ export default function Home() {
             Multiplayer
           </button>
         </div>
-        
-        {!gameState.multiplayer ? (
+          {!gameState.multiplayer ? (
           <div>
             <p>Current Direction: {gameState.direction}</p>
             <p className={styles.scoreDisplay}>Score: {gameState.score}</p>
+            <p className={styles.levelDisplay}>Level: {gameState.level}</p>
+            
+            {/* Level Progress Bar - shows progress to next level */}
+            <div className={styles.levelProgressContainer}>
+              <div 
+                className={styles.levelProgress} 
+                style={{ width: `${(gameState.score % 5) * 20}%` }}
+                title={`${5 - (gameState.score % 5)} more points to next level`}
+              ></div>
+            </div>
+            
+            {/* Leaves Counter with visual indicator */}
+            <div className={styles.leavesCounter}>
+              <div className={styles.leafIcon}></div>
+              <span>× {gameState.leaves.length}</span>
+              {gameState.level % 10 === 0 && <span> (New leaf at level {gameState.level + 1}!)</span>}
+            </div>
+            
+            {/* Speed indicator with visual representation */}
+            <div className={styles.speedIndicator}>
+              <span>Speed: {Math.round(100 + (200 - gameState.speed)/2)}%</span>
+              <div 
+                className={styles.speedBar} 
+                style={{ 
+                  width: `${Math.round((200 - gameState.speed) / 1.2)}px`,
+                  opacity: gameState.speed < 200 ? 1 : 0.5
+                }}
+              ></div>
+              {gameState.speed < 200 && <span>🔥</span>}
+              {gameState.level % 5 === 0 && <span> (Faster at level {gameState.level + 1}!)</span>}
+            </div>
           </div>
         ) : (
           <div>
@@ -177,20 +284,25 @@ export default function Home() {
           </div>
         )}
       </div>
-      
-      {gameState.gameOver && !gameState.multiplayer ? (
+        {gameState.gameOver && !gameState.multiplayer ? (
         <div className={styles.gameOver}>
           <h2>Game Over</h2>
           <p>Final Score: {gameState.score}</p>
+          <p>Final Level: {gameState.level}</p>
+          <p>Dragon Length: {gameState.dragon.length}</p>
+          <p>Leaves: {gameState.leaves.length} on board</p>
+          <p>Speed: {Math.round(100 + (200 - gameState.speed)/2)}% {gameState.speed < 200 ? '🔥' : ''}</p>
           <button 
             onClick={() => {
               setGameState(prev => ({
                 ...prev,
                 dragon: [{ x: 5, y: 5 }],
                 direction: 'RIGHT',
-                leaves: { x: 10, y: 10 },
+                leaves: [{ x: 10, y: 10 }],
                 gameOver: false,
                 score: 0,
+                level: 1,
+                speed: 200,
               }));
             }}
           >
@@ -224,7 +336,7 @@ export default function Home() {
                     );
                   } else if (isBody) {
                     return <div className={styles.dragon}></div>;
-                  } else if (gameState.leaves.x === x && gameState.leaves.y === y) {
+                  } else if (gameState.leaves.some(leaf => leaf.x === x && leaf.y === y)) {
                     return <div className={styles.leaf}></div>;
                   }
                 } else {
@@ -261,8 +373,10 @@ export default function Home() {
                   }
                   
                   // Check if a leaf is at this position
-                  if (gameState.leaves && gameState.leaves.x === x && gameState.leaves.y === y) {
-                    return <div className={styles.leaf}></div>;
+                  if (gameState.leaves && Array.isArray(gameState.leaves)) {
+                    if (gameState.leaves.some(leaf => leaf.x === x && leaf.y === y)) {
+                      return <div className={styles.leaf}></div>;
+                    }
                   }
                 }
                 

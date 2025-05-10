@@ -4,7 +4,7 @@ Bearded Dragon Run is a multiplayer web-based game inspired by the classic Snake
 
 ## Features
 - Single player and multiplayer gameplay modes
-- Control the bearded dragon using 'W', 'A', 'S', 'D' keys
+- Control the bearded dragon using 'W', 'A', 'S', 'D' keys or arrow keys
 - The dragon grows when it eats leaves
 - The game ends if the dragon collides with itself
 - In multiplayer mode, dragons can collide with other players
@@ -41,7 +41,7 @@ Bearded Dragon Run is a multiplayer web-based game inspired by the classic Snake
 - Update documentation after every change.
 
 ## Gameplay Instructions
-- Use 'W', 'A', 'S', 'D' to move the dragon
+- Use 'W', 'A', 'S', 'D' or the arrow keys to move the dragon
 - Avoid colliding with yourself or other players in multiplayer mode
 - Eat leaves to grow larger and increase your score
 - If you crash, your dragon resets to a single segment and your score resets to zero in multiplayer mode
@@ -49,6 +49,13 @@ Bearded Dragon Run is a multiplayer web-based game inspired by the classic Snake
 ## Game Mechanics
 - The game board is a 20x20 grid
 - The bearded dragon is represented by a square image with a directional indicator
+- Every 5 levels, the dragon moves faster (game speed increases by 20ms)
+- Every 10 levels, one additional leaf appears on the board
+  - Level 1-10: 1 leaf
+  - Level 11-20: 2 leaves
+  - Level 21-30: 3 leaves
+  - And so on...
+- Levels are calculated based on score (every 5 points = 1 level)
 - The leaves are represented by a circle image
 - When the dragon eats a leaf, the leaf disappears, the dragon grows by one square, and your score increases
 - The game ends if the dragon collides with itself in single player mode
@@ -57,10 +64,10 @@ Bearded Dragon Run is a multiplayer web-based game inspired by the classic Snake
 - Your own dragon appears in green, while other players' dragons appear in purple
 
 ## Controls
-- `w`: Move up
-- `a`: Move left
-- `s`: Move down
-- `d`: Move right
+- `w` or `↑`: Move up
+- `a` or `←`: Move left
+- `s` or `↓`: Move down
+- `d` or `→`: Move right
 
 ## Game Modes
 
