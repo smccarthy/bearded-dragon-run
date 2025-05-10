@@ -1,0 +1,25 @@
+{
+  "name": "bearded-dragon-run",
+  "version": "1.0.0",
+  "description": "A multiplayer web-based game where players control a bearded dragon.",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "vitest",
+    "dev:server": "node server.js",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:server\""
+  },
+  "dependencies": {
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "ws": "latest"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "vitest": "latest"
+  }
+}
