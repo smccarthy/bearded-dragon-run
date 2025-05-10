@@ -18,7 +18,9 @@ const wss = new WebSocketServer({ server });
 const clients = new Map();
 let gameState = {
   players: {},
-  leaves: { x: 10, y: 10 }
+  leaves: [{ x: 10, y: 10 }],
+  level: 1,
+  speed: 200
 };
 
 // Handle WebSocket connections
@@ -142,27 +144,78 @@ setInterval(() => {
       // Reset player
       player.dragon = [{ x: Math.floor(Math.random() * 20), y: Math.floor(Math.random() * 20) }];
       player.score = 0;
-    } else {
-      // Add new head
+    } else {      // Add new head
       player.dragon.push(newHead);
       
-      // Check if dragon eats a leaf
-      if (newHead.x === gameState.leaves.x && newHead.y === gameState.leaves.y) {
-        gameState.leaves = {
-          x: Math.floor(Math.random() * 20),
-          y: Math.floor(Math.random() * 20)
-        };
-        player.score += 1;
-      } else {
-        // Remove tail if didn't eat a leaf
-        player.dragon.shift();
-      }
+      // Check if dragon eats any leaf
+      // Check if the dragon head is on any leaf
+const eatenLeafIndex = gameState.leaves.findIndex(
+  leaf => leaf.x === newHead.x && leaf.y === newHead.y
+);
+
+if (eatenLeafIndex !== -1) {
+  player.score += 1;
+  
+  // Generate a new leaf position
+  const generateRandomLeafPosition = () => {
+    let newPos;
+    let isValidPosition = false;
+    
+    while (!isValidPosition) {
+      newPos = {
+        x: Math.floor(Math.random() * 20),
+        y: Math.floor(Math.random() * 20)
+      };
+      
+      // Check that it doesn't overlap with existing leaves
+      const leafOverlap = gameState.leaves.some(
+        leaf => leaf.x === newPos.x && leaf.y === newPos.y
+      );
+      
+      // Check that it doesn't overlap with any player's dragon
+      let dragonOverlap = false;
+      Object.values(gameState.players).forEach(p => {
+        if (p.dragon && p.dragon.some(segment => segment.x === newPos.x && segment.y === newPos.y)) {
+          dragonOverlap = true;
+        }
+      });
+      
+      isValidPosition = !leafOverlap && !dragonOverlap;
+    }
+    
+    return newPos;
+  };
+  
+  // Replace the eaten leaf
+  gameState.leaves[eatenLeafIndex] = generateRandomLeafPosition();
+    // Calculate total score across all players to determine level
+  const totalScore = Object.values(gameState.players).reduce((sum, p) => sum + p.score, 0);
+  const newLevel = Math.floor(totalScore / 5) + 1;
+  
+  // Update game level and speed if it increased
+  if (newLevel > gameState.level) {
+    gameState.level = newLevel;
+    
+    // Calculate speed - faster every 5 levels
+    const speedReduction = Math.floor((newLevel - 1) / 5) * 20;
+    gameState.speed = Math.max(80, 200 - speedReduction);
+    
+    // Add more leaves every 10 levels (at levels 11, 21, 31, etc.)
+    const requiredLeafCount = Math.floor((newLevel - 1) / 10) + 1;
+    while (gameState.leaves.length < requiredLeafCount) {
+      gameState.leaves.push(generateRandomLeafPosition());
+    }
+  }
+} else {
+  // Remove tail if didn't eat a leaf
+  player.dragon.shift();
+}
     }
   });
   
   // Broadcast updated game state to all clients
   broadcastGameState();
-}, 200);
+}, gameState.speed); // Use dynamic speed based on level
 
 // Start the server
 const PORT = process.env.PORT || 3001;

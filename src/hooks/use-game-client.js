@@ -11,11 +11,9 @@ export default function useGameClient() {
       ? `wss://${window.location.host}/api/ws`
       : `ws://${window.location.hostname}:3001`;
 
-    wsRef.current = new WebSocket(serverUrl);
-
-    // Handle WebSocket connection open
+    wsRef.current = new WebSocket(serverUrl);    // Handle WebSocket connection open
     wsRef.current.onopen = () => {
-      console.log('Connected to game server');
+      // Connection established
     };
 
     // Handle WebSocket messages from server
@@ -51,11 +49,9 @@ export default function useGameClient() {
     // Handle WebSocket errors
     wsRef.current.onerror = (error) => {
       console.error('WebSocket error:', error);
-    };
-
-    // Handle WebSocket connection closed
+    };    // Handle WebSocket connection closed
     wsRef.current.onclose = () => {
-      console.log('Disconnected from game server');
+      // Connection closed
     };
   };
 
