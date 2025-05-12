@@ -1,0 +1,168 @@
+.highScoresOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.highScoresModal {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  width: 80%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.highScoresModal h2 {
+  text-align: center;
+  color: #3c6e2b;
+  margin-bottom: 20px;
+  font-size: 28px;
+  border-bottom: 2px solid #d2b48c;
+  padding-bottom: 10px;
+}
+
+.scoreTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.scoreTable th, 
+.scoreTable td {
+  padding: 8px;
+  text-align: center;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.scoreTable th {
+  background-color: #f5f5f5;
+  font-weight: bold;
+  color: #333;
+}
+
+.scoreTable tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.scoreTable tr:hover {
+  background-color: #f0f0f0;
+}
+
+/* Highlight the top 3 scores */
+.scoreTable tr:nth-child(1) {
+  background-color: #fff9c4; /* Gold */
+  font-weight: bold;
+}
+
+.scoreTable tr:nth-child(2) {
+  background-color: #f5f5f5; /* Silver */
+}
+
+.scoreTable tr:nth-child(3) {
+  background-color: #ffebee; /* Bronze */
+}
+
+.buttonGroup {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.buttonGroup button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.buttonGroup button:hover {
+  background-color: #3c8c40;
+}
+
+.resetButton {
+  background-color: #f44336 !important;
+}
+
+.resetButton:hover {
+  background-color: #d32f2f !important;
+}
+
+.noScores {
+  text-align: center;
+  font-style: italic;
+  color: #666;
+  padding: 20px 0;
+}
+
+.newScoreForm {
+  background-color: #e8f5e9;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  border: 1px solid #a5d6a7;
+}
+
+.newScoreForm p {
+  color: #2e7d32;
+  font-weight: bold;
+  margin-top: 0;
+  text-align: center;
+}
+
+.inputGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.inputGroup label {
+  font-weight: bold;
+}
+
+.inputGroup input {
+  flex-grow: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.inputGroup button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .highScoresModal {
+    width: 95%;
+    padding: 15px;
+  }
+  
+  .inputGroup {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .inputGroup input,
+  .inputGroup button {
+    width: 100%;
+    margin-top: 5px;
+  }
+}

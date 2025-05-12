@@ -1,17 +1,26 @@
 import { useState, useEffect } from 'react';
 import styles from '../styles/Home.module.css';
 import useGameClient from '../hooks/use-game-client';
+import useHighScores from '../hooks/use-high-scores';
+import useDragonName from '../hooks/use-dragon-name';
+import HighScores from '../components/high-scores';
+import DragonNameInput from '../components/dragon-name-input';
 
 export default function Home() {
   const [multiplayer, setMultiplayer] = useState(false);
-  const [gameState, setGameState] = useState({
+  const [showHighScores, setShowHighScores] = useState(false);
+  const [showNameInput, setShowNameInput] = useState(false);
+  const [pendingScore, setPendingScore] = useState(null);
+  const [isPaused, setPaused] = useState(false);
+  const { highScores, addScore, resetScores, isHighScore } = useHighScores();
+  const { dragonName, updateDragonName } = useDragonName();  const [gameState, setGameState] = useState({
     dragon: [{ x: 5, y: 5 }],
     direction: 'RIGHT',
     leaves: [{ x: 10, y: 10 }],
     gameOver: false,
     score: 0,
     level: 1,
-    speed: 200, // base speed in ms (lower = faster)
+    speed: 300, // base speed in ms (lower = faster) - increased for slower initial movement
     multiplayer: false,
     clientId: null,
     players: {}
@@ -20,6 +29,8 @@ export default function Home() {
   const gameClient = useGameClient();  const handleKeyDown = (e) => {
     // Get the key value
     const key = e.key;
+    
+    // Spacebar handling moved to the useEffect to avoid stale closures
     
     // Create direction mapping for both WASD and arrow keys
     let direction;
@@ -37,6 +48,9 @@ export default function Home() {
     else if (key === 'ArrowRight') direction = 'RIGHT';
       // If no valid key was pressed, return
     if (!direction) return;
+    
+    // If game is paused and in single player, don't process direction changes
+    if (isPaused && !gameState.multiplayer) return;
     
     if (gameState.multiplayer) {
       // In multiplayer mode, send direction to server
@@ -58,12 +72,27 @@ export default function Home() {
         return prev;
       });
     }
-  };
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState.multiplayer]);
+  };  useEffect(() => {
+    // Create the handler inside the effect to avoid stale closures
+    const keyDownHandler = (e) => {
+      // Prevent default behavior for space key to avoid page scrolling
+      if (e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        
+        // Handle spacebar directly in this handler to avoid closure issues
+        if (!gameState.multiplayer && !gameState.gameOver) {
+          setPaused(prevPaused => !prevPaused);
+        }
+        return;
+      }
+      
+      // For other keys, use the regular handler
+      handleKeyDown(e);
+    };
+    
+    window.addEventListener('keydown', keyDownHandler);
+    return () => window.removeEventListener('keydown', keyDownHandler);
+  }, [gameState.multiplayer, gameState.gameOver]);
   
   // Connect to WebSocket server when multiplayer is enabled
   useEffect(() => {
@@ -104,28 +133,32 @@ export default function Home() {
     
     return newPos;
   };
-
   // Calculate game speed based on level
   const calculateGameSpeed = (level) => {
-    // Base speed is 200ms
-    // Every 5 levels, speed decreases by 20ms (gets faster)
-    const speedReduction = Math.floor((level - 1) / 5) * 20;
+    // Base speed is 300ms (slower initial speed)
+    // Every 5 levels, speed decreases by 15ms (gets faster, but more gradually)
+    const speedReduction = Math.floor((level - 1) / 5) * 15;
     
-    // Don't let it go below 80ms (too fast becomes unplayable)
-    return Math.max(80, 200 - speedReduction);
+    // Don't let it go below 150ms (prevent it from getting too fast)
+    return Math.max(150, 300 - speedReduction);
   };
     // Calculate number of leaves based on level
   const calculateLeafCount = (level) => {
     // Start with 1 leaf, add another every 10 levels (starting at level 11, 21, 31, etc.)
     return Math.floor((level - 1) / 10) + 1;
-  };
-
-  useEffect(() => {
+  };  useEffect(() => {
     // Only run game loop in single player mode
     if (gameState.multiplayer) return;
+    
+    // If the game is paused, don't set up the interval at all
+    if (isPaused) {
+      return () => {}; // Return empty cleanup function
+    }
 
+    // Create the interval for game updates
     const interval = setInterval(() => {
       setGameState((prev) => {
+        // Double-check game is not over
         if (prev.gameOver) return prev;
 
         const newDragon = [...prev.dragon];
@@ -198,22 +231,23 @@ export default function Home() {
 
         // Remove tail if the dragon didn't eat a leaf
         newDragon.shift();
-        return { ...prev, dragon: newDragon };
-      });
+        return { ...prev, dragon: newDragon };      });
     }, gameState.speed); // Use the dynamic speed
-
-    return () => clearInterval(interval);
-  }, [gameState.multiplayer, gameState.speed]); // Add speed as dependency
+    
+    // Properly clean up the interval on unmount or when dependencies change
+    return () => {
+      clearInterval(interval);
+    };
+  }, [gameState.multiplayer, gameState.speed, isPaused]); // Recreate interval when isPaused changes
 
   return (
-    <div className={styles.container}>
-      <h1>Bearded Dragon Run</h1>
+    <div className={styles.container}>      <h1>Bearded Dragon Run</h1>
         <div className={styles.gameInfo}>
-        <p>Controls: W/↑ (up), A/← (left), S/↓ (down), D/→ (right)</p>
-        
-        <div className={styles.gameControls}>
-          <button 
-            onClick={() => {
+        <p>Controls: W/↑ (up), A/← (left), S/↓ (down), D/→ (right), Space (pause/resume)</p>
+          <div className={styles.gameControls}>          <button            onClick={(e) => {
+              e.preventDefault(); // Prevent any default behavior
+              
+              // First update the game state
               setGameState(prev => ({
                 ...prev,
                 multiplayer: false,
@@ -223,14 +257,20 @@ export default function Home() {
                 gameOver: false,
                 score: 0,
                 level: 1,
-                speed: 200,
+                speed: 300, // Use the slower base speed
               }));
+              
+              // Then ensure the game is not paused (using a small timeout to ensure state has updated)
+              setTimeout(() => {
+                setPaused(false);
+              }, 10);
             }}
           >
             Single Player
-          </button>
-          <button 
+          </button>          <button 
             onClick={() => {
+              // Reset pause state when switching to multiplayer
+              setPaused(false);
               setGameState(prev => ({
                 ...prev,
                 multiplayer: true,
@@ -240,10 +280,46 @@ export default function Home() {
           >
             Multiplayer
           </button>
-        </div>
-          {!gameState.multiplayer ? (
-          <div>
-            <p>Current Direction: {gameState.direction}</p>
+          <button 
+            onClick={() => setShowNameInput(true)}
+          >
+            Name Dragon
+          </button>          <button 
+            onClick={() => setShowHighScores(true)}
+          >
+            High Scores
+          </button>          {!gameState.multiplayer && !gameState.gameOver && (
+            <button 
+              className={`${styles.pauseButton} ${isPaused ? styles.paused : ''}`}
+              onClick={(e) => {
+                e.preventDefault(); // Prevent any default behavior
+                e.stopPropagation(); // Stop event bubbling
+                setPaused(prevPaused => !prevPaused); // Use functional update for reliability
+              }}
+              title={isPaused ? "Resume the game" : "Pause the game (spacebar)"}
+            >
+              {isPaused ? '▶ Resume Game' : '⏸ Pause Game'}
+            </button>
+          )}
+        </div>{!gameState.multiplayer ? (          <div>
+            <div className={styles.dragonNameDisplay}>
+              <span>Dragon Name: </span>
+              <span className={styles.dragonNameText}>{dragonName}</span>
+              <button 
+                onClick={() => setShowNameInput(true)} 
+                className={styles.editNameButton}
+              >
+                ✏️
+              </button>
+            </div>            <div className={styles.gameStatus}>
+              <p>Current Direction: {isPaused ? 'PAUSED' : gameState.direction}</p>
+              {isPaused && (
+                <div className={styles.pausedStatus}>
+                  <span className={styles.pauseStatusIcon}>⏸</span>
+                  <p>GAME PAUSED (Press Space to Resume)</p>
+                </div>
+              )}
+            </div>
             <p className={styles.scoreDisplay}>Score: {gameState.score}</p>
             <p className={styles.levelDisplay}>Level: {gameState.level}</p>
             
@@ -262,18 +338,17 @@ export default function Home() {
               <span>× {gameState.leaves.length}</span>
               {gameState.level % 10 === 0 && <span> (New leaf at level {gameState.level + 1}!)</span>}
             </div>
-            
-            {/* Speed indicator with visual representation */}
+              {/* Speed indicator with visual representation */}
             <div className={styles.speedIndicator}>
-              <span>Speed: {Math.round(100 + (200 - gameState.speed)/2)}%</span>
+              <span>Speed: {Math.round(100 * (300 / gameState.speed))}%</span>
               <div 
                 className={styles.speedBar} 
                 style={{ 
-                  width: `${Math.round((200 - gameState.speed) / 1.2)}px`,
-                  opacity: gameState.speed < 200 ? 1 : 0.5
+                  width: `${Math.round((300 - gameState.speed) / 1)}px`,
+                  opacity: gameState.speed < 300 ? 1 : 0.5
                 }}
               ></div>
-              {gameState.speed < 200 && <span>🔥</span>}
+              {gameState.speed < 300 && <span>🔥</span>}
               {gameState.level % 5 === 0 && <span> (Faster at level {gameState.level + 1}!)</span>}
             </div>
           </div>
@@ -283,34 +358,70 @@ export default function Home() {
             <p>Players Online: {Object.keys(gameState.players).length}</p>
           </div>
         )}
-      </div>
-        {gameState.gameOver && !gameState.multiplayer ? (
-        <div className={styles.gameOver}>
+      </div>        {gameState.gameOver && !gameState.multiplayer ? (        <div className={styles.gameOver}>
           <h2>Game Over</h2>
+          <p className={styles.dragonNameGameOver}>{dragonName}'s Adventure Ends!</p>
           <p>Final Score: {gameState.score}</p>
           <p>Final Level: {gameState.level}</p>
           <p>Dragon Length: {gameState.dragon.length}</p>
           <p>Leaves: {gameState.leaves.length} on board</p>
-          <p>Speed: {Math.round(100 + (200 - gameState.speed)/2)}% {gameState.speed < 200 ? '🔥' : ''}</p>
-          <button 
-            onClick={() => {
-              setGameState(prev => ({
-                ...prev,
-                dragon: [{ x: 5, y: 5 }],
-                direction: 'RIGHT',
-                leaves: [{ x: 10, y: 10 }],
-                gameOver: false,
-                score: 0,
-                level: 1,
-                speed: 200,
-              }));
-            }}
-          >
-            Play Again
-          </button>
-        </div>
-      ) : (
-        <div className={styles.gameBoard}>
+          <p>Speed: {Math.round(100 * (300 / gameState.speed))}% {gameState.speed < 300 ? '🔥' : ''}</p>
+          
+          {isHighScore(gameState.score) && (
+            <p className={styles.newHighScore}>New High Score! 🏆</p>
+          )}
+          
+          <div className={styles.gameOverButtons}>          <button              onClick={(e) => {
+                e.preventDefault();
+                
+                // Check for high score
+                if (isHighScore(gameState.score)) {
+                  // Save pending score for later submission
+                  setPendingScore({
+                    score: gameState.score,
+                    level: gameState.level,
+                    dragonName: dragonName
+                  });
+                  setShowHighScores(true);
+                }
+                
+                // Reset game state first
+                setGameState(prev => ({
+                  ...prev,
+                  dragon: [{ x: 5, y: 5 }],
+                  direction: 'RIGHT',
+                  leaves: [{ x: 10, y: 10 }],
+                  gameOver: false,
+                  score: 0,
+                  level: 1,
+                  speed: 300, // Use slower base speed
+                }));
+                
+                // Then ensure the game is not paused (with a small delay)
+                setTimeout(() => {
+                  setPaused(false);
+                }, 10);
+              }}
+            >
+              Play Again
+            </button>
+            
+            <button 
+              onClick={() => setShowHighScores(true)}
+              className={styles.highScoreButton}
+            >
+              View High Scores
+            </button>
+          </div>
+        </div>      ) : (
+        <div className={styles.gameBoard}>          {isPaused && !gameState.multiplayer && (
+            <div className={styles.pauseOverlay}>
+              <div className={styles.pauseIcon}>⏸️</div>
+              <div className={styles.pauseTitle}>GAME PAUSED</div>
+              <div className={styles.pauseMessage}>Dragon is taking a break</div>
+              <div className={styles.pauseTip}>Press spacebar to resume</div>
+            </div>
+          )}
           {Array.from({ length: 20 }).map((_, y) => 
             Array.from({ length: 20 }).map((_, x) => {
               const renderCell = () => {
@@ -391,6 +502,28 @@ export default function Home() {
             })
           )}
         </div>
+      )}      {/* High Scores Modal */}
+      {showHighScores && (
+        <HighScores 
+          highScores={highScores}
+          onClose={() => {
+            setShowHighScores(false);
+            setPendingScore(null);
+          }}          onReset={resetScores}
+          onNewScore={pendingScore ? (playerName) => {
+            addScore(pendingScore.score, pendingScore.level, playerName, pendingScore.dragonName);
+            setPendingScore(null);
+          } : null}
+        />
+      )}
+      
+      {/* Dragon Name Input Modal */}
+      {showNameInput && (
+        <DragonNameInput
+          currentName={dragonName}
+          onNameChange={updateDragonName}
+          onClose={() => setShowNameInput(false)}
+        />
       )}
     </div>
   );

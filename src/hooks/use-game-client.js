@@ -3,15 +3,17 @@ import { useEffect, useRef } from 'react';
 
 export default function useGameClient() {
   const wsRef = useRef(null);
-  const clientIdRef = useRef(null);
-  // Connect to the WebSocket server
+  const clientIdRef = useRef(null);  // Connect to the WebSocket server
   const connectToServer = (setGameState) => {
     // Determine server URL based on environment
-    const serverUrl = process.env.NODE_ENV === 'production'
-      ? `wss://${window.location.host}/api/ws`
-      : `ws://${window.location.hostname}:3001`;
+    let serverUrl;
+    // Use the environment variable from next.config.js if available
+    serverUrl = process.env.WS_URL || 
+      (process.env.NODE_ENV === 'production'
+        ? `ws://${window.location.hostname}:3001`  // Using direct connection instead of rewrites
+        : `ws://${window.location.hostname}:3001`);
 
-    wsRef.current = new WebSocket(serverUrl);    // Handle WebSocket connection open
+    wsRef.current = new WebSocket(serverUrl);// Handle WebSocket connection open
     wsRef.current.onopen = () => {
       // Connection established
     };

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bearded Dragon Run</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #f7f9fb;
+      color: #333;
+    }
+    .container {
+      text-align: center;
+      max-width: 800px;
+      padding: 2rem;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      color: #2c3e50;
+    }
+    p {
+      font-size: 1.2rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+    .game-area {
+      width: 400px;
+      height: 400px;
+      border: 2px solid #34495e;
+      margin: 2rem auto;
+      background-color: #ecf0f1;
+      position: relative;
+    }
+    .dragon {
+      width: 20px;
+      height: 20px;
+      background-color: #e74c3c;
+      position: absolute;
+      left: 200px;
+      top: 200px;
+    }
+    .controls {
+      margin-top: 2rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Bearded Dragon Run</h1>
+    <p>A multiplayer web-based game where players control a bearded dragon.</p>
+    
+    <div class="game-area">
+      <div class="dragon"></div>
+    </div>
+    
+    <div class="controls">
+      Use WASD or arrow keys to move
+    </div>
+    
+    <p>Note: This is a fallback page. The Next.js app couldn't be loaded.</p>
+  </div>
+
+  <script>
+    // Simple movement for the demo
+    const dragon = document.querySelector('.dragon');
+    let x = 200;
+    let y = 200;
+    
+    document.addEventListener('keydown', (e) => {
+      switch(e.key) {
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+          y = Math.max(0, y - 10);
+          break;
+        case 'ArrowDown':
+        case 's':
+        case 'S':
+          y = Math.min(380, y + 10);
+          break;
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+          x = Math.max(0, x - 10);
+          break;
+        case 'ArrowRight':
+        case 'd':
+        case 'D':
+          x = Math.min(380, x + 10);
+          break;
+      }
+      
+      dragon.style.left = `${x}px`;
+      dragon.style.top = `${y}px`;
+    });
+  </script>
+</body>
+</html>

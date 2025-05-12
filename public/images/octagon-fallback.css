@@ -1,0 +1,8 @@
+// This is a CSS-based octagon that we'll use as a fallback
+.octagon {
+  width: 100%;
+  height: 100%;
+  background-color: #4CAF50;
+  position: relative;
+  clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+}

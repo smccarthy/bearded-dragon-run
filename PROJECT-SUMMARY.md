@@ -16,10 +16,15 @@
 7. Visual direction indicators
 8. Player color coding in multiplayer mode
 9. Game restart functionality
-10. Progressive difficulty with level-based speed increases every 5 levels
+10. Pause functionality with spacebar or button in single player mode
+11. Progressive difficulty with level-based speed increases every 5 levels
 11. Multiple leaves appearing on the board as level increases (every 10 levels)
 12. Visual level progress indicators
 13. Speed meter showing current game speed
+14. Green octagon leaves for better visual clarity
+15. Realistic tan color for the bearded dragon
+16. Top ten high scores leaderboard with persistent storage
+17. Personalized dragon naming system with persistent storage
 
 ## Technical Implementation
 - Next.js for frontend rendering and UI
@@ -31,7 +36,7 @@
 
 ## Next Steps
 - Add authentication for persistent player accounts
-- Implement a global leaderboard
+- Implement a global leaderboard for multiplayer
 - Add different game modes and power-ups
 - Improve visual design with animations
 - Add sound effects and background music
@@ -47,4 +52,5 @@
 7. Avoid colliding with yourself or other players
 8. Watch the level progress bar to see how close you are to the next level
 9. Check the speed indicator to see how fast your dragon is moving
-10. Compete for the highest score and level!
+10. Try to get on the top ten high score leaderboard
+11. Compete for the highest score and level!

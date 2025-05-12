@@ -1,0 +1,29 @@
+/* Additional styles for the dragon name feature */
+.dragonNameDisplay {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.dragonNameText {
+  color: #bc9d7e;
+  margin: 0 8px;
+  font-size: 1.1em;
+}
+
+.editNameButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  margin-left: 5px;
+}
+
+.dragonNameGameOver {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #bc9d7e;
+  margin-bottom: 15px;
+}
