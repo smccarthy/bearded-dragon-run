@@ -86,6 +86,7 @@ Bearded Dragon Run is a multiplayer game inspired by the classic Snake game. Ins
 ### Single Player
 - Play alone and try to achieve the highest score
 - Game over occurs when you collide with yourself
+- If you achieve a high score, the high score screen will automatically appear
 - Press "Play Again" to restart after game over
 
 ### Multiplayer

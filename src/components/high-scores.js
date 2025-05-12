@@ -10,11 +10,14 @@ export default function HighScores({ highScores, onClose, onReset, onNewScore = 
     const date = new Date(dateString);
     return date.toLocaleDateString();
   };
-
   const handleSubmitScore = () => {
     if (onNewScore) {
       onNewScore(playerName);
       setScoreSubmitted(true);
+      
+      // After submitting, allow the user to close the dialog
+      // This will make the dialog more usable if they're done viewing scores
+      console.log('Score submitted, ready to close');
     }
   };
 
@@ -66,9 +69,15 @@ export default function HighScores({ highScores, onClose, onReset, onNewScore = 
         ) : (
           <p className={styles.noScores}>No high scores yet! Play a game to set a record.</p>
         )}
-        
-        <div className={styles.buttonGroup}>
-          <button onClick={onClose}>Close</button>
+          <div className={styles.buttonGroup}>
+          <button 
+            onClick={() => {
+              console.log('Close button clicked');
+              if (onClose) onClose();
+            }}
+          >
+            Close
+          </button>
           {highScores.length > 0 && (
             <button 
               onClick={() => {

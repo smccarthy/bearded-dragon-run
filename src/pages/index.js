@@ -12,8 +12,9 @@ export default function Home() {
   const [showNameInput, setShowNameInput] = useState(false);
   const [pendingScore, setPendingScore] = useState(null);
   const [isPaused, setPaused] = useState(false);
+  const [processedGameOver, setProcessedGameOver] = useState(false);
   const { highScores, addScore, resetScores, isHighScore } = useHighScores();
-  const { dragonName, updateDragonName } = useDragonName();  const [gameState, setGameState] = useState({
+  const { dragonName, updateDragonName } = useDragonName();const [gameState, setGameState] = useState({
     dragon: [{ x: 5, y: 5 }],
     direction: 'RIGHT',
     leaves: [{ x: 10, y: 10 }],
@@ -106,6 +107,30 @@ export default function Home() {
       }
     };
   }, [gameState.multiplayer]);
+  // Auto-show high scores when game is over and it's a new high score
+  useEffect(() => {
+    // Only proceed if game is over, not in multiplayer, and we haven't already processed this game over
+    if (gameState.gameOver && !gameState.multiplayer && !processedGameOver) {
+      // Check if the current score is a high score and we haven't processed it yet
+      if (isHighScore(gameState.score)) {
+        // Save pending score for submission
+        setPendingScore({
+          score: gameState.score,
+          level: gameState.level,
+          dragonName: dragonName
+        });
+        // Automatically show the high scores screen
+        setShowHighScores(true);
+        // Mark this game over as processed
+        setProcessedGameOver(true);
+      }
+    }
+    
+    // Reset the processedGameOver flag when the game is not over
+    if (!gameState.gameOver) {
+      setProcessedGameOver(false);
+    }
+  }, [gameState.gameOver, gameState.multiplayer, gameState.score, gameState.level, dragonName, isHighScore, processedGameOver]);
 
   // Helper function to generate a random position for a leaf
   const generateRandomLeafPosition = (existingLeaves, dragonPositions) => {
@@ -374,16 +399,7 @@ export default function Home() {
           <div className={styles.gameOverButtons}>          <button              onClick={(e) => {
                 e.preventDefault();
                 
-                // Check for high score
-                if (isHighScore(gameState.score)) {
-                  // Save pending score for later submission
-                  setPendingScore({
-                    score: gameState.score,
-                    level: gameState.level,
-                    dragonName: dragonName
-                  });
-                  setShowHighScores(true);
-                }
+                // No need to check for high score here - it's now handled automatically in the useEffect
                 
                 // Reset game state first
                 setGameState(prev => ({
@@ -507,9 +523,11 @@ export default function Home() {
         <HighScores 
           highScores={highScores}
           onClose={() => {
+            console.log('Close callback triggered in parent');
             setShowHighScores(false);
             setPendingScore(null);
-          }}          onReset={resetScores}
+          }}
+          onReset={resetScores}
           onNewScore={pendingScore ? (playerName) => {
             addScore(pendingScore.score, pendingScore.level, playerName, pendingScore.dragonName);
             setPendingScore(null);
