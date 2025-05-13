@@ -18,6 +18,11 @@ export default function Home() {
     dragon: [{ x: 5, y: 5 }],
     direction: 'RIGHT',
     leaves: [{ x: 10, y: 10 }],
+    rocks: [
+      { x: 2, y: 2 },    // Top-left area
+      { x: 10, y: 5 },   // Middle-top area
+      { x: 18, y: 18 }   // Bottom-right corner
+    ], // Added rocks array with fixed positions
     gameOver: false,
     score: 0,
     level: 1,
@@ -164,6 +169,48 @@ export default function Home() {
     
     return newPos;
   };
+  // Generate random rocks that don't overlap with the dragon, leaves, or other rocks
+  const generateRandomRocks = (count, dragon, leaves, existingRocks = []) => {
+    const rocks = [...existingRocks];
+    
+    while (rocks.length < count) {
+      let isValidPosition = false;
+      let newPos = { x: 0, y: 0 };
+      let attempts = 0;
+      const maxAttempts = 100; // Prevent infinite loops
+      
+      while (!isValidPosition && attempts < maxAttempts) {
+        attempts++;
+        newPos = {
+          x: Math.floor(Math.random() * 20),
+          y: Math.floor(Math.random() * 20)
+        };
+        
+        // Check that it doesn't overlap with existing rocks
+        const rockOverlap = rocks.some(
+          rock => rock.x === newPos.x && rock.y === newPos.y
+        );
+        
+        // Check that it doesn't overlap with existing leaves
+        const leafOverlap = leaves.some(
+          leaf => leaf.x === newPos.x && leaf.y === newPos.y
+        );
+        
+        // Check that it doesn't overlap with the dragon
+        const dragonOverlap = dragon.some(
+          segment => segment.x === newPos.x && segment.y === newPos.y
+        );
+        
+        isValidPosition = !rockOverlap && !leafOverlap && !dragonOverlap;
+      }
+      
+      if (isValidPosition) {
+        rocks.push(newPos);
+      }
+    }
+      // Debug logging removed
+    return rocks;
+  };
   // Calculate game speed based on level
   const calculateGameSpeed = (level) => {
     // Base speed is 300ms (slower initial speed)
@@ -212,11 +259,17 @@ export default function Home() {
             break;
           default:
             return prev;
-        }
-
-        // Check for collision with self
+        }        // Check for collision with self
         if (
           newDragon.some((segment) => segment.x === newHead.x && segment.y === newHead.y)
+        ) {
+          return { ...prev, gameOver: true };
+        }
+          // Check for collision with rocks using fixed positions
+        if (
+          (newHead.x === 2 && newHead.y === 2) || 
+          (newHead.x === 10 && newHead.y === 5) || 
+          (newHead.x === 18 && newHead.y === 18)
         ) {
           return { ...prev, gameOver: true };
         }
@@ -278,13 +331,24 @@ export default function Home() {
           <div className={styles.gameControls}>          <button            onClick={(e) => {
               e.preventDefault(); // Prevent any default behavior
               
+              // Initialize dragon and leaves
+              const initialDragon = [{ x: 5, y: 5 }];
+              const initialLeaves = [{ x: 10, y: 10 }];
+                // Generate 3 rocks with fixed positions for easier visibility during debugging
+              const initialRocks = [
+                { x: 2, y: 2 },    // Top-left corner
+                { x: 18, y: 18 }   // Bottom-right corner
+              ];
+                // Debug logging removed
+              
               // First update the game state
               setGameState(prev => ({
                 ...prev,
                 multiplayer: false,
-                dragon: [{ x: 5, y: 5 }],
+                dragon: initialDragon,
                 direction: 'RIGHT',
-                leaves: [{ x: 10, y: 10 }],
+                leaves: initialLeaves,
+                rocks: initialRocks, // Add rocks to game state
                 gameOver: false,
                 score: 0,
                 level: 1,
@@ -390,7 +454,7 @@ export default function Home() {
               ></div>
               {gameState.speed < 300 && <span>🔥</span>}
               {gameState.level % 5 === 0 && <span> (Faster at level {gameState.level + 1}!)</span>}
-            </div>
+            </div>            {/* Rock debug information removed */}
           </div>
         ) : (          <div>
             <p>Your ID: {gameState.clientId || 'Connecting...'}</p>
@@ -418,13 +482,23 @@ export default function Home() {
                 e.preventDefault();
                 
                 // No need to check for high score here - it's now handled automatically in the useEffect
+                  // Initialize dragon and leaves
+                const initialDragon = [{ x: 5, y: 5 }];
+                const initialLeaves = [{ x: 10, y: 10 }];
+                // Generate fixed rocks for debugging
+                const initialRocks = [
+                  { x: 2, y: 2 },    // Top-left corner
+                  { x: 10, y: 5 },   // Middle-top area
+                  { x: 18, y: 18 }   // Bottom-right corner
+                ];
                 
                 // Reset game state first
                 setGameState(prev => ({
                   ...prev,
-                  dragon: [{ x: 5, y: 5 }],
+                  dragon: initialDragon,
                   direction: 'RIGHT',
-                  leaves: [{ x: 10, y: 10 }],
+                  leaves: initialLeaves,
+                  rocks: initialRocks, // Add rocks to game state
                   gameOver: false,
                   score: 0,
                   level: 1,
@@ -457,8 +531,9 @@ export default function Home() {
             </div>
           )}
           {Array.from({ length: 20 }).map((_, y) => 
-            Array.from({ length: 20 }).map((_, x) => {
-              const renderCell = () => {
+            Array.from({ length: 20 }).map((_, x) => {              const renderCell = () => {                // Remove this section - we'll handle rock rendering later
+                  // Test rock removed
+
                 if (!gameState.multiplayer) {
                   // Single player rendering
                   const isHead = gameState.dragon.length > 0 && 
@@ -468,7 +543,6 @@ export default function Home() {
                   const isBody = !isHead && gameState.dragon.some(segment => 
                     segment.x === x && segment.y === y
                   );
-                  
                   if (isHead) {
                     return (
                       <div className={styles.dragonHead}>
@@ -478,11 +552,23 @@ export default function Home() {
                            gameState.direction === 'LEFT' ? '←' : '→'}
                         </div>
                       </div>
+                    );                  } else if (isBody) {
+                    return <div className={styles.dragon}></div>;                  } else if (gameState.leaves.some(leaf => leaf.x === x && leaf.y === y)) {
+                    return <div className={styles.leaf}></div>;                  } else if ((x === 2 && y === 2) || (x === 10 && y === 5) || (x === 18 && y === 18)) {
+                    // Rock styling updated to look more natural
+                    return (
+                      <div 
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          backgroundColor: '#7D7D7D',
+                          borderRadius: '40%',
+                          border: '1px solid #555555',
+                          boxShadow: '2px 2px 3px rgba(0,0,0,0.3) inset'
+                        }}
+                      >
+                      </div>
                     );
-                  } else if (isBody) {
-                    return <div className={styles.dragon}></div>;
-                  } else if (gameState.leaves.some(leaf => leaf.x === x && leaf.y === y)) {
-                    return <div className={styles.leaf}></div>;
                   }
                 } else {
                   // Multiplayer rendering
@@ -522,6 +608,22 @@ export default function Home() {
                     if (gameState.leaves.some(leaf => leaf.x === x && leaf.y === y)) {
                       return <div className={styles.leaf}></div>;
                     }
+                  }                  // Check for rocks in multiplayer mode using fixed positions
+                  if ((x === 2 && y === 2) || (x === 10 && y === 5) || (x === 18 && y === 18)) {
+                    // Rock styling updated to look more natural
+                    return (
+                      <div 
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          backgroundColor: '#7D7D7D',
+                          borderRadius: '40%',
+                          border: '1px solid #555555',
+                          boxShadow: '2px 2px 3px rgba(0,0,0,0.3) inset'
+                        }}
+                      >
+                      </div>
+                    );
                   }
                 }
                 

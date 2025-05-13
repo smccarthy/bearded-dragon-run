@@ -8,11 +8,12 @@
 
 ## Key Features Implemented
 1. Bearded dragon movement with WASD keys and arrow key controls
-2. Collision detection with self and other players
+2. Collision detection with self, rocks, and other players
 3. Leaf eating and dragon growth mechanics
 4. Score tracking and display
 5. Board wrapping when reaching edges
-6. Real-time multiplayer with WebSocket communication limited to 2 players maximum
+6. Stationary rock obstacles that cause game over on collision
+7. Real-time multiplayer with WebSocket communication limited to 2 players maximum
 7. Visual direction indicators
 8. Player color coding in multiplayer mode
 9. Game restart functionality
@@ -51,7 +52,8 @@
 5. Eat leaves to grow longer and increase your score
 6. Level up every 5 points to make your dragon move faster
 7. At higher levels (11, 21, 31, etc.), additional leaves will appear for more scoring opportunities
-8. Avoid colliding with yourself or other players
+8. Avoid colliding with yourself, rocks, or other players
+9. Rocks are stationary obstacles that appear randomly on the board
 9. Watch the level progress bar to see how close you are to the next level
 10. Check the speed indicator to see how fast your dragon is moving
 11. In multiplayer mode, you'll see the number of connected players (max 2)

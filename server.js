@@ -19,9 +19,61 @@ const clients = new Map();
 let gameState = {
   players: {},
   leaves: [{ x: 10, y: 10 }],
+  rocks: [], // Add rocks array
   level: 1,
   speed: 200
 };
+
+// Generate random rocks that don't overlap with players or leaves
+function generateRandomRocks(count) {
+  const rocks = [];
+  
+  while (rocks.length < count) {
+    let isValidPosition = false;
+    let newPos = { x: 0, y: 0 };
+    let attempts = 0;
+    const maxAttempts = 100; // Prevent infinite loops
+    
+    while (!isValidPosition && attempts < maxAttempts) {
+      attempts++;
+      newPos = {
+        x: Math.floor(Math.random() * 20),
+        y: Math.floor(Math.random() * 20)
+      };
+      
+      // Check that it doesn't overlap with existing rocks
+      const rockOverlap = rocks.some(
+        rock => rock.x === newPos.x && rock.y === newPos.y
+      );
+      
+      // Check that it doesn't overlap with existing leaves
+      const leafOverlap = gameState.leaves.some(
+        leaf => leaf.x === newPos.x && leaf.y === newPos.y
+      );
+      
+      // Check that it doesn't overlap with any players' dragons
+      let dragonOverlap = false;
+      Object.values(gameState.players).forEach(player => {
+        if (player.dragon && player.dragon.some(
+          segment => segment.x === newPos.x && segment.y === newPos.y
+        )) {
+          dragonOverlap = true;
+        }
+      });
+      
+      isValidPosition = !rockOverlap && !leafOverlap && !dragonOverlap;
+    }
+    
+    if (isValidPosition) {
+      rocks.push(newPos);
+    }
+  }
+  
+  return rocks;
+}
+
+// Initialize 3 random rocks at server start
+gameState.rocks = generateRandomRocks(3);
 
 // Handle WebSocket connections
 wss.on('connection', (ws) => {
@@ -103,32 +155,31 @@ function broadcastGameState() {
   });
 }
 
-// Helper function to check collision with other players
-const checkPlayerCollision = (playerId, newHead) => {
-  for (const [otherPlayerId, otherPlayer] of Object.entries(gameState.players)) {
-    // Skip comparing with self
-    if (otherPlayerId === playerId || !otherPlayer.dragon) continue;
-    
-    // Check collision with any segment of other player
-    if (otherPlayer.dragon.some(segment => segment.x === newHead.x && segment.y === newHead.y)) {
-      return true;
+// Function to check if a player collides with another player's dragon
+function checkPlayerCollision(playerId, head) {
+  for (const [otherId, otherPlayer] of Object.entries(gameState.players)) {
+    if (otherId !== playerId) {
+      if (otherPlayer.dragon.some(segment => segment.x === head.x && segment.y === head.y)) {
+        return true;
+      }
     }
   }
   return false;
-};
+}
 
-// Game loop
+// Function to check if a player collides with a rock
+function checkRockCollision(head) {
+  return gameState.rocks.some(rock => rock.x === head.x && rock.y === head.y);
+}
+
+// Set up game loop for updating game state
 setInterval(() => {
-  // Move each player's dragon
-  Object.keys(gameState.players).forEach(playerId => {
-    const player = gameState.players[playerId];
-    
-    if (!player.dragon || player.dragon.length === 0) return;
+  Object.entries(gameState.players).forEach(([playerId, player]) => {
+    if (!player.dragon.length) return; // Skip if dragon was reset
     
     const head = player.dragon[player.dragon.length - 1];
     let newHead;
     
-    // Calculate new head position based on direction
     switch (player.direction) {
       case 'UP':
         newHead = { x: head.x, y: (head.y - 1 + 20) % 20 };
@@ -154,76 +205,85 @@ setInterval(() => {
     // Check for collision with other players
     const otherCollision = checkPlayerCollision(playerId, newHead);
     
-    if (selfCollision || otherCollision) {
+    // Check for collision with rocks
+    const rockCollision = checkRockCollision(newHead);
+    
+    if (selfCollision || otherCollision || rockCollision) {
       // Reset player
       player.dragon = [{ x: Math.floor(Math.random() * 20), y: Math.floor(Math.random() * 20) }];
       player.score = 0;
-    } else {      // Add new head
+    } else {      
+      // Add new head
       player.dragon.push(newHead);
       
       // Check if dragon eats any leaf
-      // Check if the dragon head is on any leaf
-const eatenLeafIndex = gameState.leaves.findIndex(
-  leaf => leaf.x === newHead.x && leaf.y === newHead.y
-);
-
-if (eatenLeafIndex !== -1) {
-  player.score += 1;
-  
-  // Generate a new leaf position
-  const generateRandomLeafPosition = () => {
-    let newPos;
-    let isValidPosition = false;
-    
-    while (!isValidPosition) {
-      newPos = {
-        x: Math.floor(Math.random() * 20),
-        y: Math.floor(Math.random() * 20)
-      };
-      
-      // Check that it doesn't overlap with existing leaves
-      const leafOverlap = gameState.leaves.some(
-        leaf => leaf.x === newPos.x && leaf.y === newPos.y
+      const eatenLeafIndex = gameState.leaves.findIndex(
+        leaf => leaf.x === newHead.x && leaf.y === newHead.y
       );
-      
-      // Check that it doesn't overlap with any player's dragon
-      let dragonOverlap = false;
-      Object.values(gameState.players).forEach(p => {
-        if (p.dragon && p.dragon.some(segment => segment.x === newPos.x && segment.y === newPos.y)) {
-          dragonOverlap = true;
+
+      if (eatenLeafIndex !== -1) {
+        player.score += 1;
+        
+        // Generate a new leaf position
+        const generateRandomLeafPosition = () => {
+          let newPos;
+          let isValidPosition = false;
+          
+          while (!isValidPosition) {
+            newPos = {
+              x: Math.floor(Math.random() * 20),
+              y: Math.floor(Math.random() * 20)
+            };
+            
+            // Check that it doesn't overlap with existing leaves
+            const leafOverlap = gameState.leaves.some(
+              leaf => leaf.x === newPos.x && leaf.y === newPos.y
+            );
+            
+            // Check that it doesn't overlap with any player's dragon
+            let dragonOverlap = false;
+            Object.values(gameState.players).forEach(p => {
+              if (p.dragon && p.dragon.some(segment => segment.x === newPos.x && segment.y === newPos.y)) {
+                dragonOverlap = true;
+              }
+            });
+            
+            // Check that it doesn't overlap with any rocks
+            const rockOverlap = gameState.rocks.some(
+              rock => rock.x === newPos.x && rock.y === newPos.y
+            );
+            
+            isValidPosition = !leafOverlap && !dragonOverlap && !rockOverlap;
+          }
+          
+          return newPos;
+        };
+        
+        // Replace the eaten leaf
+        gameState.leaves[eatenLeafIndex] = generateRandomLeafPosition();
+        
+        // Calculate total score across all players to determine level
+        const totalScore = Object.values(gameState.players).reduce((sum, p) => sum + p.score, 0);
+        const newLevel = Math.floor(totalScore / 5) + 1;
+        
+        // Update game level and speed if it increased
+        if (newLevel > gameState.level) {
+          gameState.level = newLevel;
+          
+          // Calculate speed - faster every 5 levels
+          const speedReduction = Math.floor((newLevel - 1) / 5) * 20;
+          gameState.speed = Math.max(80, 200 - speedReduction);
+          
+          // Add more leaves every 10 levels (at levels 11, 21, 31, etc.)
+          const requiredLeafCount = Math.floor((newLevel - 1) / 10) + 1;
+          while (gameState.leaves.length < requiredLeafCount) {
+            gameState.leaves.push(generateRandomLeafPosition());
+          }
         }
-      });
-      
-      isValidPosition = !leafOverlap && !dragonOverlap;
-    }
-    
-    return newPos;
-  };
-  
-  // Replace the eaten leaf
-  gameState.leaves[eatenLeafIndex] = generateRandomLeafPosition();
-    // Calculate total score across all players to determine level
-  const totalScore = Object.values(gameState.players).reduce((sum, p) => sum + p.score, 0);
-  const newLevel = Math.floor(totalScore / 5) + 1;
-  
-  // Update game level and speed if it increased
-  if (newLevel > gameState.level) {
-    gameState.level = newLevel;
-    
-    // Calculate speed - faster every 5 levels
-    const speedReduction = Math.floor((newLevel - 1) / 5) * 20;
-    gameState.speed = Math.max(80, 200 - speedReduction);
-    
-    // Add more leaves every 10 levels (at levels 11, 21, 31, etc.)
-    const requiredLeafCount = Math.floor((newLevel - 1) / 10) + 1;
-    while (gameState.leaves.length < requiredLeafCount) {
-      gameState.leaves.push(generateRandomLeafPosition());
-    }
-  }
-} else {
-  // Remove tail if didn't eat a leaf
-  player.dragon.shift();
-}
+      } else {
+        // Remove tail if didn't eat a leaf
+        player.dragon.shift();
+      }
     }
   });
   

@@ -9,6 +9,7 @@ Bearded Dragon Run is a multiplayer game inspired by the classic Snake game. Ins
 - The dragon grows when it eats leaves
 - Adjustable game speed for better playability
 - The game ends if the dragon collides with itself
+- The game ends if the dragon collides with rocks
 - In multiplayer mode, dragons can collide with other players
 - Visual indicators showing the current direction and pause state
 - Score tracking system with high scores
@@ -51,7 +52,7 @@ Bearded Dragon Run is a multiplayer game inspired by the classic Snake game. Ins
 ## Gameplay Instructions
 - Use 'W', 'A', 'S', 'D' or the arrow keys to move the dragon
 - Press spacebar or the pause button to pause/resume the game in single player mode
-- Avoid colliding with yourself or other players in multiplayer mode
+- Avoid colliding with yourself, rocks, or other players in multiplayer mode
 - Eat leaves to grow larger and increase your score
 - If you crash, your dragon resets to a single segment and your score resets to zero in multiplayer mode
 
@@ -65,11 +66,16 @@ Bearded Dragon Run is a multiplayer game inspired by the classic Snake game. Ins
   - Level 11-20: 2 leaves
   - Level 21-30: 3 leaves
   - And so on...
+- The game contains 3 randomly placed rocks that act as obstacles
+  - Rocks remain stationary throughout the game
+  - Colliding with a rock ends the game
+  - Rocks are placed in random positions that don't overlap with the dragon, leaves, or other rocks
 - Levels are calculated based on score (every 5 points = 1 level)
 - The leaves are represented by a circle image
+- Obstacles (rocks) are represented by a rock image
 - When the dragon eats a leaf, the leaf disappears, the dragon grows by one square, and your score increases
 - The game can be paused at any time using the spacebar or pause button (single player only)
-- The game ends if the dragon collides with itself in single player mode
+- The game ends if the dragon collides with itself or with a rock in single player mode
 - If the dragon reaches the edge of the board, it wraps around to the other side and continues moving
 - In multiplayer mode, dragons are color-coded to distinguish between players
 - Your own dragon appears in green, while other players' dragons appear in purple
@@ -85,14 +91,14 @@ Bearded Dragon Run is a multiplayer game inspired by the classic Snake game. Ins
 
 ### Single Player
 - Play alone and try to achieve the highest score
-- Game over occurs when you collide with yourself
+- Game over occurs when you collide with yourself or with a rock
 - If you achieve a high score, the high score screen will automatically appear
 - Press "Play Again" to restart after game over
 
 ### Multiplayer
 - Limited to 2 players maximum
 - Play with another player in real-time
-- Your dragon resets if you collide with yourself or another player
+- Your dragon resets if you collide with yourself, another player, or a rock
 - Both players compete to eat leaves and grow their dragons
 - The player with the highest score wins
 
