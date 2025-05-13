@@ -90,9 +90,10 @@ Bearded Dragon Run is a multiplayer game inspired by the classic Snake game. Ins
 - Press "Play Again" to restart after game over
 
 ### Multiplayer
-- Play with other connected players in real-time
+- Limited to 2 players maximum
+- Play with another player in real-time
 - Your dragon resets if you collide with yourself or another player
-- All players compete to eat leaves and grow their dragons
+- Both players compete to eat leaves and grow their dragons
 - The player with the highest score wins
 
 ## Contribution

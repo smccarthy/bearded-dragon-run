@@ -33,7 +33,8 @@ export default function useGameClient() {
             clientId: data.id,
             players: data.gameState.players,
             leaves: data.gameState.leaves,
-            gameOver: false
+            gameOver: false,
+            connectionError: null
           });
         } else if (data.type === 'update') {
           // Update the game state from server
@@ -42,6 +43,21 @@ export default function useGameClient() {
             players: data.gameState.players,
             leaves: data.gameState.leaves
           }));
+        } else if (data.type === 'connection_rejected') {
+          // Handle connection rejection
+          console.log('Connection rejected:', data.message);
+          
+          // Update game state to show the error
+          setGameState(prev => ({
+            ...prev,
+            multiplayer: false, // Switch back to single player
+            connectionError: data.message
+          }));
+          
+          // Close the connection as it was rejected
+          if (wsRef.current) {
+            wsRef.current.close();
+          }
         }
       } catch (e) {
         console.error('Error parsing WebSocket message:', e);

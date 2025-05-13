@@ -25,6 +25,20 @@ let gameState = {
 
 // Handle WebSocket connections
 wss.on('connection', (ws) => {
+  // Check if we already have 2 players (limit reached)
+  if (clients.size >= 2) {
+    // Send a rejection message to the client
+    ws.send(JSON.stringify({
+      type: 'connection_rejected',
+      reason: 'game_full',
+      message: 'Game is full (2-player maximum)'
+    }));
+    
+    // Close the connection
+    ws.close();
+    return;
+  }
+  
   // Generate a unique ID for this client
   const id = Date.now().toString();
   

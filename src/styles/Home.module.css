@@ -376,3 +376,37 @@
   from { transform: translateX(-10px); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
 }
+
+/* Error message styling */
+.errorMessage {
+  color: #ffffff;
+  background-color: #e74c3c;
+  padding: 10px 15px;
+  margin: 10px 0;
+  border-radius: 6px;
+  font-weight: bold;
+  text-align: center;
+  animation: fadeIn 0.3s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Player limit info style */
+.playerLimit {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: rgba(52, 152, 219, 0.15);
+  padding: 10px;
+  border-radius: 6px;
+  border-left: 4px solid #3498db;
+  font-size: 14px;
+}
+
+.infoIcon {
+  font-size: 18px;
+}

@@ -14,7 +14,7 @@ export default function Home() {
   const [isPaused, setPaused] = useState(false);
   const [processedGameOver, setProcessedGameOver] = useState(false);
   const { highScores, addScore, resetScores, isHighScore } = useHighScores();
-  const { dragonName, updateDragonName } = useDragonName();const [gameState, setGameState] = useState({
+  const { dragonName, updateDragonName } = useDragonName();  const [gameState, setGameState] = useState({
     dragon: [{ x: 5, y: 5 }],
     direction: 'RIGHT',
     leaves: [{ x: 10, y: 10 }],
@@ -24,7 +24,8 @@ export default function Home() {
     speed: 300, // base speed in ms (lower = faster) - increased for slower initial movement
     multiplayer: false,
     clientId: null,
-    players: {}
+    players: {},
+    connectionError: null
   });
   
   const gameClient = useGameClient();  const handleKeyDown = (e) => {
@@ -94,19 +95,24 @@ export default function Home() {
     window.addEventListener('keydown', keyDownHandler);
     return () => window.removeEventListener('keydown', keyDownHandler);
   }, [gameState.multiplayer, gameState.gameOver]);
-  
-  // Connect to WebSocket server when multiplayer is enabled
+    // Connect to WebSocket server when multiplayer is enabled
   useEffect(() => {
     if (gameState.multiplayer) {
       gameClient.connectToServer(setGameState);
-    }
-    
-    return () => {
-      if (gameState.multiplayer) {
+      
+      // Set a timeout to check if we successfully connected
+      const connectionCheckTimeout = setTimeout(() => {
+        if (gameState.connectionError) {
+          console.log('Connection failed or was rejected');
+        }
+      }, 2000);
+      
+      return () => {
+        clearTimeout(connectionCheckTimeout);
         gameClient.closeConnection();
-      }
-    };
-  }, [gameState.multiplayer]);
+      };
+    }
+  }, [gameState.multiplayer, gameState.connectionError]);
   // Auto-show high scores when game is over and it's a new high score
   useEffect(() => {
     // Only proceed if game is over, not in multiplayer, and we haven't already processed this game over
@@ -294,14 +300,16 @@ export default function Home() {
             Single Player
           </button>          <button 
             onClick={() => {
-              // Reset pause state when switching to multiplayer
+              // Reset pause state and clear any previous errors when switching to multiplayer
               setPaused(false);
               setGameState(prev => ({
                 ...prev,
                 multiplayer: true,
+                connectionError: null
               }));
             }}
             disabled={gameState.multiplayer}
+            title="Join multiplayer game (max 2 players)"
           >
             Multiplayer
           </button>
@@ -326,7 +334,14 @@ export default function Home() {
               {isPaused ? '▶ Resume Game' : '⏸ Pause Game'}
             </button>
           )}
-        </div>{!gameState.multiplayer ? (          <div>
+        </div>        {/* Display connection error if any */}
+        {gameState.connectionError && (
+          <div className={styles.errorMessage}>
+            <span>⚠️ {gameState.connectionError}</span>
+          </div>
+        )}
+        
+        {!gameState.multiplayer ? (          <div>
             <div className={styles.dragonNameDisplay}>
               <span>Dragon Name: </span>
               <span className={styles.dragonNameText}>{dragonName}</span>
@@ -336,7 +351,7 @@ export default function Home() {
               >
                 ✏️
               </button>
-            </div>            <div className={styles.gameStatus}>
+            </div><div className={styles.gameStatus}>
               <p>Current Direction: {isPaused ? 'PAUSED' : gameState.direction}</p>
               {isPaused && (
                 <div className={styles.pausedStatus}>
@@ -377,10 +392,13 @@ export default function Home() {
               {gameState.level % 5 === 0 && <span> (Faster at level {gameState.level + 1}!)</span>}
             </div>
           </div>
-        ) : (
-          <div>
+        ) : (          <div>
             <p>Your ID: {gameState.clientId || 'Connecting...'}</p>
-            <p>Players Online: {Object.keys(gameState.players).length}</p>
+            <p>Players Online: {Object.keys(gameState.players).length} / 2</p>
+            <div className={styles.playerLimit}>
+              <span className={styles.infoIcon}>ℹ️</span>
+              <span>Only 2 players maximum allowed in multiplayer mode</span>
+            </div>
           </div>
         )}
       </div>        {gameState.gameOver && !gameState.multiplayer ? (        <div className={styles.gameOver}>
