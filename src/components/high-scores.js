@@ -6,7 +6,7 @@ export default function HighScores({ highScores, onClose, onReset, onNewScore = 
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
 
   // Format date to be more readable
-  const formatDate = (dateString) => {
+  const formatDate = dateString => {
     const date = new Date(dateString);
     return date.toLocaleDateString();
   };
@@ -14,7 +14,7 @@ export default function HighScores({ highScores, onClose, onReset, onNewScore = 
     if (onNewScore) {
       onNewScore(playerName);
       setScoreSubmitted(true);
-      
+
       // After submitting, allow the user to close the dialog
       // This will make the dialog more usable if they're done viewing scores
       console.log('Score submitted, ready to close');
@@ -25,7 +25,7 @@ export default function HighScores({ highScores, onClose, onReset, onNewScore = 
     <div className={styles.highScoresOverlay}>
       <div className={styles.highScoresModal}>
         <h2>Top 10 Scores</h2>
-        
+
         {onNewScore && !scoreSubmitted && (
           <div className={styles.newScoreForm}>
             <p>Congratulations! You made the high score list!</p>
@@ -35,17 +35,19 @@ export default function HighScores({ highScores, onClose, onReset, onNewScore = 
                 id="playerName"
                 type="text"
                 value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
+                onChange={e => setPlayerName(e.target.value)}
                 maxLength={15}
               />
               <button onClick={handleSubmitScore}>Submit</button>
             </div>
           </div>
         )}
-        
+
         {highScores.length > 0 ? (
           <table className={styles.scoreTable}>
-            <thead>              <tr>
+            <thead>
+              {' '}
+              <tr>
                 <th>#</th>
                 <th>Player</th>
                 <th>Dragon</th>
@@ -55,7 +57,8 @@ export default function HighScores({ highScores, onClose, onReset, onNewScore = 
               </tr>
             </thead>
             <tbody>
-              {highScores.map((entry, index) => (                <tr key={index}>
+              {highScores.map((entry, index) => (
+                <tr key={index}>
                   <td>{index + 1}</td>
                   <td>{entry.playerName}</td>
                   <td>{entry.dragonName || 'Dragon'}</td>
@@ -69,8 +72,8 @@ export default function HighScores({ highScores, onClose, onReset, onNewScore = 
         ) : (
           <p className={styles.noScores}>No high scores yet! Play a game to set a record.</p>
         )}
-          <div className={styles.buttonGroup}>
-          <button 
+        <div className={styles.buttonGroup}>
+          <button
             onClick={() => {
               console.log('Close button clicked');
               if (onClose) onClose();
@@ -79,7 +82,7 @@ export default function HighScores({ highScores, onClose, onReset, onNewScore = 
             Close
           </button>
           {highScores.length > 0 && (
-            <button 
+            <button
               onClick={() => {
                 if (window.confirm('Are you sure you want to reset all high scores?')) {
                   onReset();

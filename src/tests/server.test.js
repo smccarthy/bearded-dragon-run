@@ -20,7 +20,7 @@ vi.mock('ws', () => {
               mockWs.callbacks = mockWs.callbacks || {};
               mockWs.callbacks[event] = callback;
             }),
-            send: vi.fn((data) => {
+            send: vi.fn(data => {
               mockWs.lastSentData = JSON.parse(data);
             }),
             callbacks: {},
@@ -65,18 +65,19 @@ export default describe('Game Server', () => {
   let mockWss;
   let mockClient1;
   let mockClient2;
-  
+
   beforeEach(async () => {
     // Reset mocks
     vi.resetModules();
-    
-    try {      // Import the server module - use an absolute path
+
+    try {
+      // Import the server module - use an absolute path
       serverModule = await import('../../server.js');
-      
+
       // Get mock WebSocketServer instance
       const WebSocketServer = await import('ws').then(m => m.WebSocketServer);
       mockWss = WebSocketServer.mock.results[0].value;
-      
+
       // Simulate client connections
       mockClient1 = mockWss.simulateConnection();
       mockClient2 = mockWss.simulateConnection();
@@ -84,11 +85,11 @@ export default describe('Game Server', () => {
       console.error('Error in test setup:', error);
     }
   });
-  
+
   afterEach(() => {
     vi.resetAllMocks();
   });
-  
+
   it('should initialize players', () => {
     // Just a simple test to verify the test suite runs
     expect(true).toBe(true);

@@ -12,13 +12,13 @@ const localStorageMock = (() => {
     }),
     clear: () => {
       store = {};
-    }
+    },
   };
 })();
 
 // Replace global localStorage with mock
 Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock
+  value: localStorageMock,
 });
 
 describe('useDragonName', () => {
@@ -43,37 +43,39 @@ describe('useDragonName', () => {
 
   it('should update dragon name and save to localStorage', () => {
     const { result } = renderHook(() => useDragonName());
-    
+
     act(() => {
       result.current.updateDragonName('Rex');
     });
-    
+
     expect(result.current.dragonName).toBe('Rex');
     expect(localStorageMock.setItem).toHaveBeenCalledWith('beardedDragonName', 'Rex');
   });
 
   it('should use default name if empty name is provided', () => {
     const { result } = renderHook(() => useDragonName());
-    
+
     act(() => {
       result.current.updateDragonName('');
     });
-    
+
     expect(result.current.dragonName).toBe('Dragon');
     expect(localStorageMock.setItem).toHaveBeenCalledWith('beardedDragonName', 'Dragon');
   });
-  
+
   it('should handle localStorage errors gracefully', () => {
     // Simulate localStorage error
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    localStorageMock.getItem.mockImplementation(() => { throw new Error('Storage error'); });
-    
+    localStorageMock.getItem.mockImplementation(() => {
+      throw new Error('Storage error');
+    });
+
     const { result } = renderHook(() => useDragonName());
-    
+
     // Should use default name when localStorage throws an error
     expect(result.current.dragonName).toBe('Dragon');
     expect(consoleErrorSpy).toHaveBeenCalled();
-    
+
     consoleErrorSpy.mockRestore();
   });
 });

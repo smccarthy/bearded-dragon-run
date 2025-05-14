@@ -1,13 +1,14 @@
 // Server code for multiplayer functionality
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
-import { readFileSync } from 'fs';
+// import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import { createServer as createViteServer } from 'vite';
+import { dirname } from 'path';
+// import { createServer as createViteServer } from 'vite';
 
 // Get the directory name
 const __filename = fileURLToPath(import.meta.url);
+// eslint-disable-next-line no-unused-vars
 const __dirname = dirname(__filename);
 
 // Create the HTTP server
@@ -21,54 +22,51 @@ let gameState = {
   leaves: [{ x: 10, y: 10 }],
   rocks: [], // Add rocks array
   level: 1,
-  speed: 200
+  speed: 200,
 };
 
 // Generate random rocks that don't overlap with players or leaves
 function generateRandomRocks(count) {
   const rocks = [];
-  
+
   while (rocks.length < count) {
     let isValidPosition = false;
     let newPos = { x: 0, y: 0 };
     let attempts = 0;
     const maxAttempts = 100; // Prevent infinite loops
-    
+
     while (!isValidPosition && attempts < maxAttempts) {
       attempts++;
       newPos = {
         x: Math.floor(Math.random() * 20),
-        y: Math.floor(Math.random() * 20)
+        y: Math.floor(Math.random() * 20),
       };
-      
+
       // Check that it doesn't overlap with existing rocks
-      const rockOverlap = rocks.some(
-        rock => rock.x === newPos.x && rock.y === newPos.y
-      );
-      
+      const rockOverlap = rocks.some(rock => rock.x === newPos.x && rock.y === newPos.y);
+
       // Check that it doesn't overlap with existing leaves
-      const leafOverlap = gameState.leaves.some(
-        leaf => leaf.x === newPos.x && leaf.y === newPos.y
-      );
-      
+      const leafOverlap = gameState.leaves.some(leaf => leaf.x === newPos.x && leaf.y === newPos.y);
+
       // Check that it doesn't overlap with any players' dragons
       let dragonOverlap = false;
       Object.values(gameState.players).forEach(player => {
-        if (player.dragon && player.dragon.some(
-          segment => segment.x === newPos.x && segment.y === newPos.y
-        )) {
+        if (
+          player.dragon &&
+          player.dragon.some(segment => segment.x === newPos.x && segment.y === newPos.y)
+        ) {
           dragonOverlap = true;
         }
       });
-      
+
       isValidPosition = !rockOverlap && !leafOverlap && !dragonOverlap;
     }
-    
+
     if (isValidPosition) {
       rocks.push(newPos);
     }
   }
-  
+
   return rocks;
 }
 
@@ -76,49 +74,53 @@ function generateRandomRocks(count) {
 gameState.rocks = generateRandomRocks(3);
 
 // Handle WebSocket connections
-wss.on('connection', (ws) => {
+wss.on('connection', ws => {
   // Check if we already have 2 players (limit reached)
   if (clients.size >= 2) {
     // Send a rejection message to the client
-    ws.send(JSON.stringify({
-      type: 'connection_rejected',
-      reason: 'game_full',
-      message: 'Game is full (2-player maximum)'
-    }));
-    
+    ws.send(
+      JSON.stringify({
+        type: 'connection_rejected',
+        reason: 'game_full',
+        message: 'Game is full (2-player maximum)',
+      })
+    );
+
     // Close the connection
     ws.close();
     return;
   }
-  
+
   // Generate a unique ID for this client
   const id = Date.now().toString();
-  
+
   // Store the connection
   clients.set(ws, id);
-  
+
   // Initialize player
   gameState.players[id] = {
     dragon: [{ x: Math.floor(Math.random() * 20), y: Math.floor(Math.random() * 20) }],
     direction: 'RIGHT',
-    score: 0
+    score: 0,
   };
-  
+
   // Send initial game state to the new player
-  ws.send(JSON.stringify({
-    type: 'init',
-    id: id,
-    gameState: gameState
-  }));
-  
+  ws.send(
+    JSON.stringify({
+      type: 'init',
+      id: id,
+      gameState: gameState,
+    })
+  );
+
   // Broadcast updated game state to all clients
   broadcastGameState();
-  
+
   // Handle messages from client
-  ws.on('message', (message) => {
+  ws.on('message', message => {
     try {
       const data = JSON.parse(message);
-      
+
       if (data.type === 'direction') {
         const playerId = clients.get(ws);
         if (playerId && gameState.players[playerId]) {
@@ -129,7 +131,7 @@ wss.on('connection', (ws) => {
       console.error('Error processing message:', e);
     }
   });
-  
+
   // Handle disconnect
   ws.on('close', () => {
     const playerId = clients.get(ws);
@@ -145,11 +147,12 @@ wss.on('connection', (ws) => {
 function broadcastGameState() {
   const message = JSON.stringify({
     type: 'update',
-    gameState: gameState
+    gameState: gameState,
   });
-  
+
   clients.forEach((_, client) => {
-    if (client.readyState === 1) { // OPEN
+    if (client.readyState === 1) {
+      // OPEN
       client.send(message);
     }
   });
@@ -176,10 +179,10 @@ function checkRockCollision(head) {
 setInterval(() => {
   Object.entries(gameState.players).forEach(([playerId, player]) => {
     if (!player.dragon.length) return; // Skip if dragon was reset
-    
+
     const head = player.dragon[player.dragon.length - 1];
     let newHead;
-    
+
     switch (player.direction) {
       case 'UP':
         newHead = { x: head.x, y: (head.y - 1 + 20) % 20 };
@@ -196,26 +199,26 @@ setInterval(() => {
       default:
         return;
     }
-    
+
     // Check for collision with self
-    const selfCollision = player.dragon.some(segment => 
-      segment.x === newHead.x && segment.y === newHead.y
+    const selfCollision = player.dragon.some(
+      segment => segment.x === newHead.x && segment.y === newHead.y
     );
-    
+
     // Check for collision with other players
     const otherCollision = checkPlayerCollision(playerId, newHead);
-    
+
     // Check for collision with rocks
     const rockCollision = checkRockCollision(newHead);
-    
+
     if (selfCollision || otherCollision || rockCollision) {
       // Reset player
       player.dragon = [{ x: Math.floor(Math.random() * 20), y: Math.floor(Math.random() * 20) }];
       player.score = 0;
-    } else {      
+    } else {
       // Add new head
       player.dragon.push(newHead);
-      
+
       // Check if dragon eats any leaf
       const eatenLeafIndex = gameState.leaves.findIndex(
         leaf => leaf.x === newHead.x && leaf.y === newHead.y
@@ -223,57 +226,60 @@ setInterval(() => {
 
       if (eatenLeafIndex !== -1) {
         player.score += 1;
-        
+
         // Generate a new leaf position
         const generateRandomLeafPosition = () => {
           let newPos;
           let isValidPosition = false;
-          
+
           while (!isValidPosition) {
             newPos = {
               x: Math.floor(Math.random() * 20),
-              y: Math.floor(Math.random() * 20)
+              y: Math.floor(Math.random() * 20),
             };
-            
+
             // Check that it doesn't overlap with existing leaves
             const leafOverlap = gameState.leaves.some(
               leaf => leaf.x === newPos.x && leaf.y === newPos.y
             );
-            
+
             // Check that it doesn't overlap with any player's dragon
             let dragonOverlap = false;
             Object.values(gameState.players).forEach(p => {
-              if (p.dragon && p.dragon.some(segment => segment.x === newPos.x && segment.y === newPos.y)) {
+              if (
+                p.dragon &&
+                p.dragon.some(segment => segment.x === newPos.x && segment.y === newPos.y)
+              ) {
                 dragonOverlap = true;
               }
             });
-            
+
             // Check that it doesn't overlap with any rocks
             const rockOverlap = gameState.rocks.some(
               rock => rock.x === newPos.x && rock.y === newPos.y
             );
-            
+
             isValidPosition = !leafOverlap && !dragonOverlap && !rockOverlap;
           }
-          
+
           return newPos;
         };
-        
+
         // Replace the eaten leaf
         gameState.leaves[eatenLeafIndex] = generateRandomLeafPosition();
-        
+
         // Calculate total score across all players to determine level
         const totalScore = Object.values(gameState.players).reduce((sum, p) => sum + p.score, 0);
         const newLevel = Math.floor(totalScore / 5) + 1;
-        
+
         // Update game level and speed if it increased
         if (newLevel > gameState.level) {
           gameState.level = newLevel;
-          
+
           // Calculate speed - faster every 5 levels
           const speedReduction = Math.floor((newLevel - 1) / 5) * 20;
           gameState.speed = Math.max(80, 200 - speedReduction);
-          
+
           // Add more leaves every 10 levels (at levels 11, 21, 31, etc.)
           const requiredLeafCount = Math.floor((newLevel - 1) / 10) + 1;
           while (gameState.leaves.length < requiredLeafCount) {
@@ -286,7 +292,7 @@ setInterval(() => {
       }
     }
   });
-  
+
   // Broadcast updated game state to all clients
   broadcastGameState();
 }, gameState.speed); // Use dynamic speed based on level

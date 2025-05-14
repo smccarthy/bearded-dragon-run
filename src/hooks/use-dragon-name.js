@@ -17,13 +17,13 @@ export default function useDragonName() {
   }, []);
 
   // Save dragon name to localStorage when it changes
-  const updateDragonName = (newName) => {
+  const updateDragonName = newName => {
     if (!newName || newName.trim() === '') {
       newName = 'Dragon'; // Default name if empty
     }
-    
+
     setDragonName(newName);
-    
+
     try {
       localStorage.setItem('beardedDragonName', newName);
     } catch (error) {
@@ -33,6 +33,6 @@ export default function useDragonName() {
 
   return {
     dragonName,
-    updateDragonName
+    updateDragonName,
   };
 }

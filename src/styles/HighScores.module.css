@@ -37,7 +37,7 @@
   margin-bottom: 20px;
 }
 
-.scoreTable th, 
+.scoreTable th,
 .scoreTable td {
   padding: 8px;
   text-align: center;
@@ -79,7 +79,7 @@
 }
 
 .buttonGroup button {
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
   border: none;
   padding: 10px 15px;
@@ -141,7 +141,7 @@
 }
 
 .inputGroup button {
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
   border: none;
   padding: 8px 15px;
@@ -154,12 +154,12 @@
     width: 95%;
     padding: 15px;
   }
-  
+
   .inputGroup {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .inputGroup input,
   .inputGroup button {
     width: 100%;

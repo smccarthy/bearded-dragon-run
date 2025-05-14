@@ -1,28 +1,41 @@
 {
-    "name": "bearded-dragon-run",
-    "version": "1.0.0",
-    "description": "A multiplayer web-based game where players control a bearded dragon.",
-    "author": "Bearded Dragon Run Team",
-    "type": "module",
-    "scripts": {
-        "dev": "next dev",
-        "build": "next build",
-        "start": "serve out",
-        "start:next": "next start",
-        "test": "vitest --watch=false",
-        "dev:server": "node server.js",
-        "dev:all": "concurrently \"npm run dev\" \"npm run dev:server\""
-    },
-    "dependencies": {
-        "next": "latest",
-        "react": "latest",
-        "react-dom": "latest",
-        "ws": "latest"
-    },    "devDependencies": {
-        "@testing-library/react": "^14.2.1",
-        "concurrently": "^9.1.2",
-        "jsdom": "^26.1.0",
-        "serve": "^14.2.4",
-        "vitest": "latest"
-    }
+  "name": "bearded-dragon-run",
+  "version": "1.0.0",
+  "description": "A multiplayer web-based game where players control a bearded dragon.",
+  "author": "Bearded Dragon Run Team",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "serve out",
+    "start:next": "next start",
+    "test": "vitest --watch=false",
+    "dev:server": "node server.js",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:server\"",
+    "lint": "eslint --ext .js,.jsx .",
+    "lint:fix": "eslint --ext .js,.jsx . --fix",
+    "format": "prettier --write \"**/*.{js,jsx,json,css,md}\"",
+    "check-format": "prettier --check \"**/*.{js,jsx,json,css,md}\""
+  },
+  "dependencies": {
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "ws": "latest"
+  },
+  "devDependencies": {
+    "@next/eslint-plugin-next": "^15.3.2",
+    "@testing-library/react": "^14.2.1",
+    "concurrently": "^9.1.2",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-prettier": "^5.4.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "jsdom": "^26.1.0",
+    "prettier": "^3.5.3",
+    "serve": "^14.2.4",
+    "vitest": "latest"
+  }
 }

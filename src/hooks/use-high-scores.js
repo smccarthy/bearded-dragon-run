@@ -58,7 +58,7 @@ export default function useHighScores() {
   };
 
   // Check if a score qualifies for the high score list
-  const isHighScore = (score) => {
+  const isHighScore = score => {
     if (highScores.length < MAX_SCORES) return true;
     return highScores.some(entry => score > entry.score);
   };
@@ -67,6 +67,6 @@ export default function useHighScores() {
     highScores,
     addScore,
     resetScores,
-    isHighScore
+    isHighScore,
   };
 }

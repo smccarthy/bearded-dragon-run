@@ -3,6 +3,7 @@
 Bearded Dragon Run is a multiplayer game inspired by the classic Snake game. Instead of a snake, players control a bearded dragon that grows as it eats leaves. The game ends if the dragon collides with itself or another player.
 
 ## Features
+
 - Single player and multiplayer gameplay modes
 - Control the bearded dragon using 'W', 'A', 'S', 'D' keys or arrow keys
 - Pause/resume functionality with spacebar or pause button in single player mode
@@ -15,6 +16,7 @@ Bearded Dragon Run is a multiplayer game inspired by the classic Snake game. Ins
 - Score tracking system with high scores
 
 ## Technologies Used
+
 - **Next.js** for the client
 - **Node.js** for the server
 - **WebSocket** for real-time multiplayer communication
@@ -32,24 +34,54 @@ Bearded Dragon Run is a multiplayer game inspired by the classic Snake game. Ins
    npm run dev; node server.js
    ```
 4. Build the project:
+
    ```bash
    npm run build
    ```
+
    The build generates static HTML files in the `out` directory (configured in next.config.js).
 
 5. Start the production servers:
+
    ```bash
    npm run start; node server.js
    ```
-   
-   Note: The app uses static export, so the `start` command uses a static file server (serve) 
+
+   Note: The app uses static export, so the `start` command uses a static file server (serve)
    to serve files from the `out` directory. You'll also need to run the WebSocket server separately.
 
 ## Development
+
+### Code Style & Linting
+
+The project uses ESLint and Prettier to enforce consistent code style and catch potential errors:
+
+- **ESLint**: Static code analyzer to find and fix problems
+- **Prettier**: Automatic code formatter
+
+Run the following commands to check and fix code:
+
+```bash
+# Check for linting issues
+npm run lint
+
+# Fix linting issues 
+npm run lint:fix
+
+# Format code with Prettier
+npm run format
+
+# Check for formatting issues without modifying files
+npm run check-format
+```
+
+VS Code settings are included in the project to automatically format code on save when using the ESLint and Prettier extensions.
+
 - Use `npm run test` to run tests and ensure 90% coverage.
 - Update documentation after every change.
 
 ## Gameplay Instructions
+
 - Use 'W', 'A', 'S', 'D' or the arrow keys to move the dragon
 - Press spacebar or the pause button to pause/resume the game in single player mode
 - Avoid colliding with yourself, rocks, or other players in multiplayer mode
@@ -57,6 +89,7 @@ Bearded Dragon Run is a multiplayer game inspired by the classic Snake game. Ins
 - If you crash, your dragon resets to a single segment and your score resets to zero in multiplayer mode
 
 ## Game Mechanics
+
 - The game board is a 20x20 grid
 - The bearded dragon is represented by a square image with a directional indicator
 - Every 5 levels, the dragon moves faster (game speed increases by 15ms)
@@ -81,6 +114,7 @@ Bearded Dragon Run is a multiplayer game inspired by the classic Snake game. Ins
 - Your own dragon appears in green, while other players' dragons appear in purple
 
 ## Controls
+
 - `w` or `↑`: Move up
 - `a` or `←`: Move left
 - `s` or `↓`: Move down
@@ -90,12 +124,14 @@ Bearded Dragon Run is a multiplayer game inspired by the classic Snake game. Ins
 ## Game Modes
 
 ### Single Player
+
 - Play alone and try to achieve the highest score
 - Game over occurs when you collide with yourself or with a rock
 - If you achieve a high score, the high score screen will automatically appear
 - Press "Play Again" to restart after game over
 
 ### Multiplayer
+
 - Limited to 2 players maximum
 - Play with another player in real-time
 - Your dragon resets if you collide with yourself, another player, or a rock
@@ -103,4 +139,5 @@ Bearded Dragon Run is a multiplayer game inspired by the classic Snake game. Ins
 - The player with the highest score wins
 
 ## Contribution
+
 Feel free to fork the repository and submit pull requests for new features or bug fixes.

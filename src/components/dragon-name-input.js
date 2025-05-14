@@ -4,7 +4,7 @@ import styles from '../styles/DragonNameInput.module.css';
 export default function DragonNameInput({ currentName, onNameChange, onClose }) {
   const [name, setName] = useState(currentName || 'Dragon');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = e => {
     e.preventDefault();
     onNameChange(name);
     onClose();
@@ -21,10 +21,10 @@ export default function DragonNameInput({ currentName, onNameChange, onClose }) 
               id="dragonName"
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={e => setName(e.target.value)}
               maxLength={15}
               placeholder="Enter a name for your dragon"
-              autoFocus
+              /* Removed autoFocus for better accessibility */
             />
           </div>
           <div className={styles.buttonGroup}>
